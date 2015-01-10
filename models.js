@@ -33,7 +33,6 @@ var SecondaryModel;
             removeName: 'removeCoin',
             onAdd: safeCb(this, 'onCoinAdded'),
             onRemove: safeCb(this, 'onCoinRemoved'),
-            listen: false
         });
 
         this.coins = [];
@@ -55,14 +54,6 @@ var SecondaryModel;
             broadcast: false
         });
 
-        defineModelArray(this, 'coins', {
-            channel: channel,
-            addName: 'addCoin',
-            removeName: 'removeCoin',
-            onAdd: safeCb(this, 'onCoinAdded'),
-            onRemove: safeCb(this, 'onCoinRemoved'),
-            broadcast: false
-        });
     };
 
     // ---Model Creation Helpers---
@@ -139,39 +130,36 @@ var SecondaryModel;
         obj[getPrivateNameOf(propName)] = [];
         obj[opt.addName] = getAddFunction(obj, propName, opt);
         obj[opt.removeName] = getRemoveFunction(obj, propName, opt);
-        if (opt.listen !== false)
-            listenForArrayChange(obj, propName, opt);
+        listenForArrayChange(obj, propName, opt);
     }
 
     function getAddFunction(obj, propName, opt) {
         return function (toAdd) {
             obj[getPrivateNameOf(propName)].push(toAdd);
-            if(opt.broadcast !== false)
-                pubnub.publish({ // TODO: Refactor and remove duplication
-                    channel: opt.channel,
-                    message: {
-                        type: 'arrayValAdd',
-                        objId: obj.id,
-                        prop: propName,
-                        val: obj // ineffiecient, but reliable
-                    }
-                });
+            pubnub.publish({ // TODO: Refactor and remove duplication
+                channel: opt.channel,
+                message: {
+                    type: 'arrayValAdd',
+                    objId: obj.id,
+                    prop: propName,
+                    val: obj // ineffiecient, but reliable
+                }
+            });
         };
     }
 
     function getRemoveFunction(obj, propName, opt) {
         return function (toRemove) {
             obj[getPrivateNameOf(propName)].remove(toRemove);
-            if(opt.broadcast !== false)
-                pubnub.publish({
-                    channel: opt.channel,
-                    message: {
-                        type: 'arrayValRemove',
-                        objId: obj.id,
-                        prop: propName,
-                        val: obj // ineffiecient, but reliable
-                    }
-                });
+            pubnub.publish({
+                channel: opt.channel,
+                message: {
+                    type: 'arrayValRemove',
+                    objId: obj.id,
+                    prop: propName,
+                    val: obj // ineffiecient, but reliable
+                }
+            });
         };
     }
 
