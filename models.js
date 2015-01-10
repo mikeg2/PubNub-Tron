@@ -2,16 +2,11 @@
 var PrimaryModel;
 var SecondaryModel;
 
-(function model() {
+(function models() {
     pubnub = PUBNUB.init({
         publish_key: 'demo',
         subscribe_key: 'demo'
     });
-
-    function Player(opt) {
-        this.id = opt.objId;
-        defineModelProperties(this, ['points', 'location'], opt);
-    }
 
     // ---Models---
     PrimaryModel = function(channel) {
@@ -55,6 +50,11 @@ var SecondaryModel;
         });
 
     };
+
+    function Player(opt) {
+        this.id = opt.objId;
+        defineModelProperties(this, ['points', 'location'], opt);
+    }
 
     // ---Model Creation Helpers---
     function defineModelProperties(obj, propNames, opt) {
@@ -128,6 +128,7 @@ var SecondaryModel;
     // - Right now, just sends entire array
     function defineModelArray(obj, propName, opt) {
         obj[getPrivateNameOf(propName)] = [];
+        defineAlias(obj, getPrivateNameOf(propName), propName);
         obj[opt.addName] = getAddFunction(obj, propName, opt);
         obj[opt.removeName] = getRemoveFunction(obj, propName, opt);
         listenForArrayChange(obj, propName, opt);
@@ -191,5 +192,16 @@ var SecondaryModel;
                 fnct(a);
             }
         };
+    }
+
+    function defineAlias(obj, prop, alias) {
+        Object.defineProperty(obj, alias, {
+            get: function() {
+                return obj[prop];
+            },
+            set: function(val) {
+                obj[prop] = val;
+            }
+        });
     }
 })();
