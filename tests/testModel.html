@@ -1,0 +1,46 @@
+<html>
+<head>
+    <title>Test Model</title>
+</head>
+<body>
+    <div>
+        <h1>Game Status Test</h1>
+        <input type="textfield" name="status" />
+        <button id="testGameStatus">testGameStatus</button>
+    </div>
+    <div>
+        <h1>Coin Adding Test</h1>
+        <button id="testCoinAdding">testCoinAdding</button>
+    </div>
+    <script src="http://cdn.pubnub.com/pubnub-3.7.1.min.js"></script>
+    <script src="../models.js"></script>
+    <script type="text/javascript">
+        // models
+        modelP = new PrimaryModel(100);
+        modelS = new SecondaryModel(100);
+
+        // Game Status Test
+        modelS.onGameStateUpdated = function(status) {
+            alert("SUCCESS: " + status)
+        }
+        document.getElementById('testGameStatus')
+            .onclick = function() {
+                modelP.gameState = document.querySelector('input[name="status"]').value;
+            };
+
+        // Coin Adding Test
+        modelS.onCoinAdded = function(array) {
+            alert(array);
+        }
+        document.getElementById('testCoinAdding')
+            .onclick = function() {
+                modelP.addCoin({
+                    x: 1,
+                    y: 1,
+                });
+            };
+
+
+    </script>
+</body>
+</html>
