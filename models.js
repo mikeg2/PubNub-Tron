@@ -1,25 +1,20 @@
 //Global Variables / Exports
-var PrimaryModel;
-var SecondaryModel;
+var SyncModel;
 
 (function models() {
-    pubnub = PUBNUB.init({
-        publish_key: 'demo',
-        subscribe_key: 'demo'
-    });
-
     // ---Models---
-    PrimaryModel = function(channel) {
+    MODEL_PROPERTIES = ['gameState'];
+
+    SyncModel = function(channel) {
         var playerOpt = {
             channel: channel
         };
-        this.playerMe = new Player(playerOpt);
-        this.playerOther = new Player(playerOpt);
+        this.playerMe = new Player("playerMe", playerOpt); // TODO: Need a way to flip these so that they work
+        this.playerOther = new Player("playerOther", playerOpt);
 
         this.id = "model"; // Objects with same ID are synced with PubNub
-        defineModelProperties(this, ['gameState'], {
+        defineModelProperties(this, MODEL_PROPERTIES, {
             channel: channel,
-            listen: false
         });
 
         defineModelArray(this, 'coins', {
@@ -27,33 +22,16 @@ var SecondaryModel;
             addName: 'addCoin',
             removeName: 'removeCoin',
             onAdd: safeCb(this, 'onCoinAdded'),
-            onRemove: safeCb(this, 'onCoinRemoved'),
+            onRemove: safeCb(this, 'onCoinRemoved')
         });
 
         this.coins = [];
         this.gameOver = false;
     };
 
-    // Make sure this side is always listening first.
-    // TODO: Find out if you can guarentee message recieved!
-    SecondaryModel = function(channel) {
-        var opt = {
-            channel: channel
-        };
-        this.playerMe = new Player(opt);
-        this.playerOther = new Player(opt);
-
-        this.id = "model";
-        defineModelProperties(this, ['gameState'], {
-            channel: channel,
-            broadcast: false
-        });
-
-    };
-
-    function Player(opt) {
-        this.id = opt.objId;
-        defineModelProperties(this, ['points', 'location'], opt);
+    function Player(id, opt) {
+        this.id = id;
+        defineModelProperties(this, ['points', 'position'], opt);
     }
 
     // ---Model Creation Helpers---
@@ -61,13 +39,14 @@ var SecondaryModel;
         var getOnSet = opt.getOnSet || defaultGetOnSet;
         for (var i = propNames.length - 1; i >= 0; i--) {
             var name = propNames[i];
-            opt.onSet = getOnSet(obj, name);
-            defineModelProperty(obj, name, opt);
+            var newOpt = $.extend(true, {}, opt);
+            newOpt.onSet = getOnSet(obj, name);
+            defineModelProperty(obj, name, newOpt);
         }
     }
 
     function defaultGetOnSet (obj, propName) {
-        cbName = 'on' + capitalize(propName) + "Updated";
+        var cbName = 'on' + capitalize(propName) + "Updated";
         console.log("DEFAULT GET ON SET: ", cbName);
         return safeCb(obj, cbName);
     }
@@ -81,7 +60,7 @@ var SecondaryModel;
         Object.defineProperty(obj, propName, {
             set: function(val) {
                 console.log("OBJECT: ", obj, "SETTING: ", propName, " TO: ", val);
-                this[getPrivateNameOf(propName)] = val;
+                this[privateName(propName)] = val;
                 opt.onSet(val);
                 if (opt.broadcast !== false) {
                     broadcastObjectValue(
@@ -103,32 +82,33 @@ var SecondaryModel;
                 type: 'propVal',
                 objId: obj.id,
                 prop: propName,
-                val: obj[getPrivateNameOf(propName)]
+                val: obj[privateName(propName)]
             }
         });
     }
 
     function listenForObjectValue(obj, propName, opt) {
-        pubnub.subscribe({
-            channel: opt.channel,
-            message: function(message, env, channel) {
+        getChannel(opt.channel).listen(
+            function(message, env, channel) {
                 console.log("OBJ: ", obj, " HEARD: ", message, " ON: ", channel, " WITH: ", opt);
+                console.log("^ FOR PROP: ", propName);
                 if (message['type'] == "propVal" &&
                         message['objId'] == obj.id &&
                         message['prop'] == propName) {
-                    console.log("^SYNCING");
-                    obj[getPrivateNameOf(propName)] = message.val;
+                    console.log("^SYNCING: ", obj);
+                    obj[privateName(propName)] = message.val;
                     opt.onSet(message.val);
+                    console.log("FINISH ON SET");
                 }
             }
-        });
+        );
     }
 
     // TODO: Make sure this is reliable even if a single message is missed...
     // - Right now, just sends entire array
     function defineModelArray(obj, propName, opt) {
-        obj[getPrivateNameOf(propName)] = [];
-        defineAlias(obj, getPrivateNameOf(propName), propName);
+        obj[privateName(propName)] = [];
+        defineAlias(obj, privateName(propName), propName);
         obj[opt.addName] = getAddFunction(obj, propName, opt);
         obj[opt.removeName] = getRemoveFunction(obj, propName, opt);
         listenForArrayChange(obj, propName, opt);
@@ -136,14 +116,16 @@ var SecondaryModel;
 
     function getAddFunction(obj, propName, opt) {
         return function (toAdd) {
-            obj[getPrivateNameOf(propName)].push(toAdd);
+            obj[privateName(propName)].push(toAdd);
+            opt.onAdd();
+            console.log("ADDING: ", toAdd);
             pubnub.publish({ // TODO: Refactor and remove duplication
                 channel: opt.channel,
                 message: {
                     type: 'arrayValAdd',
                     objId: obj.id,
                     prop: propName,
-                    val: obj // ineffiecient, but reliable
+                    val: obj[privateName(propName)] // ineffiecient, but reliable
                 }
             });
         };
@@ -151,43 +133,53 @@ var SecondaryModel;
 
     function getRemoveFunction(obj, propName, opt) {
         return function (toRemove) {
-            obj[getPrivateNameOf(propName)].remove(toRemove);
+            obj[privateName(propName)].remove(toRemove);
+            opt.onRemove();
             pubnub.publish({
                 channel: opt.channel,
                 message: {
                     type: 'arrayValRemove',
                     objId: obj.id,
                     prop: propName,
-                    val: obj // ineffiecient, but reliable
+                    val: obj[privateName(propName)] // ineffiecient, but reliable
                 }
             });
         };
     }
 
     function listenForArrayChange(obj, propName, opt) {
-        pubnub.subscribe({
-            channel: opt.channel,
-            message: function(message, env, channel) {
-                if (message['type'] == "arrayValRemove" || message['type'] == "arrayValAdd" &&
+        console.log("LISTEN FOR ARRAY: ", propName, " ON: ", opt);
+        getChannel(opt.channel).listen(
+            function(message, env, channel) {
+                console.log("ARRAY OBJ: ", obj, " HEARD: ", message, " ON: ", channel, " WITH: ", opt);
+                if ((message['type'] == "arrayValRemove" || message['type'] == "arrayValAdd") &&
                         message['objId'] == obj.id &&
                         message['prop'] == propName) {
-                    obj[getPrivateNameOf(propName)] = message.val;
+                    obj[privateName(propName)] = message.val;
+                    console.log("onAdd CB: ", opt.onAdd);
+                    if (message['type'] == "arrayValAdd") {
+                        opt.onAdd(message.val);
+                    } else {
+                        opt.onRemove(message.val);
+                    }
                 }
             }
-        });
+        );
     }
 
 
     // By using a private name, setter/getter don't go off when value changes
-    function getPrivateNameOf(propName) {
+    function privateName(propName) {
         return "_" + propName;
     }
 
     // ---Utility---
     function safeCb(object, fnctName) {
+        console.log("FNCT NAME: ", fnctName);
         return function(a) {
-            console.log("SAFE CALLBACK: ", a);
+            console.log("SAFE CALLBACK: ", a, " ON: ", object);
             var fnct = object[fnctName];
+            console.log("^CALLING: ", fnct, " WITH: ", fnctName, " ON: ", object);
             if (fnct) {
                 fnct(a);
             }

@@ -6,18 +6,24 @@
     <div>
         <h1>Game Status Test</h1>
         <input type="textfield" name="status" />
-        <button id="testGameStatus">testGameStatus</button>
+        <button type="button" id="testGameStatus">testGameStatus</button>
     </div>
     <div>
         <h1>Coin Adding Test</h1>
         <button id="testCoinAdding">testCoinAdding</button>
     </div>
+    <div>
+        <h1>Player Location Test</h1>
+        <button id="changeLocation">changeLocation</button>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="http://cdn.pubnub.com/pubnub-3.7.1.min.js"></script>
+    <script src="../pubnubWrapper.js"></script>
     <script src="../models.js"></script>
     <script type="text/javascript">
         // models
-        var modelP = new PrimaryModel(100);
-        var modelS = new SecondaryModel(100);
+        var modelP = new SyncModel(100);
+        var modelS = new SyncModel(100);
 
         // Game Status Test
         modelS.onGameStateUpdated = function(status) {
@@ -29,8 +35,8 @@
             };
 
         // Coin Adding Test
-        modelS.onCoinAdded = function(array) {
-            alert(array);
+        modelS.onCoinAdded = function(obj) {
+            alert(JSON.stringify(obj));
         }
         document.getElementById('testCoinAdding')
             .onclick = function() {
@@ -40,6 +46,17 @@
                 });
             };
 
+        // Player Location Test
+        document.getElementById('changeLocation')
+            .onclick = function() {
+                modelP.playerMe.position = {x: 1, y: 2};
+            };
+
+        modelS.playerMe.onPositionUpdated = function(loc) {
+            alert("SUCCESS: " + JSON.stringify(loc));
+        }
+
+        console.log("MODELS: ", modelS);
 
     </script>
 </body>
