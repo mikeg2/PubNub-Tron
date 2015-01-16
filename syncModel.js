@@ -1,37 +1,55 @@
 //Global Variables / Exports
-var SyncModel;
+var GameSyncModel;
 
 (function models() {
     // ---Models---
     MODEL_PROPERTIES = ['gameState'];
 
-    SyncModel = function(channel) {
+    GameSyncModel = function(channel, me) {
         var playerOpt = {
             channel: channel
         };
-        this.playerMe = new Player("playerMe", playerOpt); // TODO: Need a way to flip these so that they work
-        this.playerOther = new Player("playerOther", playerOpt);
+        this.players = [];
+        this.addPlayer = function(id) {
+            var player = new Player(id, playerOpt);
+            this.players.push(player);
+            return player;
+        };
+        this.me = this.addPlayer(me);
 
         this.id = "model"; // Objects with same ID are synced with PubNub
         defineModelProperties(this, MODEL_PROPERTIES, {
             channel: channel,
         });
 
-        defineModelArray(this, 'coins', {
-            channel: channel,
-            addName: 'addCoin',
-            removeName: 'removeCoin',
-            onAdd: safeCb(this, 'onCoinAdded'),
-            onRemove: safeCb(this, 'onCoinRemoved')
-        });
-
-        this.coins = [];
+        this.events = [];
         this.gameOver = false;
     };
 
     function Player(id, opt) {
         this.id = id;
         defineModelProperties(this, ['points', 'position'], opt);
+
+        /*
+        EVENT TYPES:
+            BASIC STRUCTURE: {
+                loc: ,
+                time: ,
+                type: ,
+            }
+            TYPES:
+                Move { dir: l, r, u, d }
+                
+
+            
+         */
+        defineModelArray(this, 'events', {
+            channel: channel,
+            addName: 'addEvent',
+            removeName: 'removeEvent',
+            onAdd: safeCb(this, 'onEventAdded'),
+            onRemove: safeCb(this, 'onEventRemoved')
+        });
     }
 
     // ---Model Creation Helpers---

@@ -22,8 +22,8 @@
     <script src="../models.js"></script>
     <script type="text/javascript">
         // models
-        var modelP = new SyncModel(100);
-        var modelS = new SyncModel(100);
+        var modelP = new GameSyncModel(100);
+        var modelS = new GameSyncModel(100);
 
         // Game Status Test
         modelS.onGameStateUpdated = function(status) {
