@@ -4,20 +4,20 @@ var CONNECTION_SETTINGS = {
     };
 
 // Wraps Pubnub to allow for multiple subscribe calls (now called "listen")
+var pubnub = PUBNUB.init(CONNECTION_SETTINGS);
 var Channel = function(channel) {
     var self = this;
-    this.pubnub = pubnub = PUBNUB.init(CONNECTION_SETTINGS);
     this.listeners = [];
 
     this.listen = function(cb) {
         self.listeners.push(cb);
     };
-    this.broadcast = this.pubnub.broadcast;
 
+    console.log("PUBNUB APPER LISTENING ON: ", channel, " PUBNUB: ", pubnub);
     pubnub.subscribe({
         channel: channel,
-        windowing: 30,
         message: function(msg, env, chnl) {
+            console.log("HEARD: ", msg, " ON: ", chnl);
             for (var i = self.listeners.length - 1; i >= 0; i--) {
                 var listener = self.listeners[i];
                 listener(msg, env, chnl);

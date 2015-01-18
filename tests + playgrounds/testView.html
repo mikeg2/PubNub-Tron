@@ -1,0 +1,40 @@
+<html>
+<head>
+    <style type="text/css">
+
+    </style>    
+</head>
+<body>
+
+<title>Test View</title>
+<canvas id="canvas">
+</canvas>
+
+<script type="text/javascript" src="https://code.createjs.com/easeljs-0.8.0.min.js"></script>
+<script src="../view.js"></script>
+<script>
+    var currentTime = new Date().getTime();
+    new GameView({
+        players: [
+            {
+                id: "test",
+                events: [
+                    {dir: 'd', time: currentTime - 10000},
+                    {dir: 'r', time: currentTime - 9000},
+                    {dir: 'd', time: currentTime - 8000},
+                    {dir: 'r', time: currentTime - 7000},
+                    {dir: 'u', time: currentTime - 6000},
+                    {dir: 'l', time: currentTime - 5000},
+                    {dir: 'd', time: currentTime - 4000},
+                    {dir: 'u', time: currentTime - 3500},
+                    {dir: 'r', time: currentTime - 2700},
+                    {dir: 'd', time: currentTime - 500},
+                ]
+            }
+        ]
+    }, {
+        canvas: '#canvas'
+    })
+</script>
+</body>
+</html>

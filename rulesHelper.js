@@ -6,6 +6,7 @@ function convertEventsToLineSegments(eventsSorted, startingState) {
     for (var i = eventsSorted.length - 1; i >= 0; i--) {
         var startingEvent = eventsSorted[i];
         var endingEvent = eventsSorted[i];
+        var 
     }
 }
 
