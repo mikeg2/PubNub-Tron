@@ -3,19 +3,6 @@
     <title>Test Model</title>
 </head>
 <body>
-    <div>
-        <h1>Game Status Test</h1>
-        <input type="textfield" name="status" />
-        <button type="button" id="testGameStatus">testGameStatus</button>
-    </div>
-    <div>
-        <h1>Coin Adding Test</h1>
-        <button id="testCoinAdding">testCoinAdding</button>
-    </div>
-    <div>
-        <h1>Player Location Test</h1>
-        <button id="changeLocation">changeLocation</button>
-    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="http://cdn.pubnub.com/pubnub-3.7.1.min.js"></script>
     <script src="../pubnubWrapper.js"></script>
@@ -25,22 +12,64 @@
             channelBase: 100,
             id: "randomId"
         }
-        var eventListClient = new ClientEventList(conf);
 
-        eventListClient.onChange = function(a) {
-            console.log("ON CHANGE CLIENT: ", a);
-        }
+        var serverModel = new ServerModel(conf);
+        var clientModel = new ClientModel(conf);
+        var players = [0, 1, 2, 3, 4, 5];
+        for (var i = players.length - 1; i >= 0; i--) {
+            var p = players[i];
+            serverModel.addPlayer(p);
+            clientModel.addPlayer(p);
+        };
 
-        eventListClient.addEvent({
-            drct: 'l'
-        });
-        setTimeout(function() {
-            eventListClient.addEvent({
+        setTimeout(runTests, 3000);
+        function runTests() {
+            var cPlayer0 = clientModel.players[0];
+            cPlayer0.eventList.addEvent({
                 drct: 'l'
             });
-        }, 1000);
-        // Should have one ON CHANGE SERVER and two ON CHANGE CLIENT
+            assert(cPlayer0.eventList.getEvents().length == 1);
+            assert(cPlayer0.eventList.getEvents()[0].temp);
 
+            clientModel.players[0].onChange(function() {
+                assert(cPlayer0.eventList.getEvents().length == 1);
+                assert(!cPlayer0.eventList.getEvents()[0].temp);
+                assertModelsTheSame(clientModel.players[0].eventList.getEvents());
+                console.log("SUCCESS 1 of 2 (Client)");
+            })
+
+            serverModel.players[0].onChange(function() {
+                assert(serverModel.players[0].eventList.getEvents().length == 1);
+                assert(!serverModel.players[0].eventList.getEvents()[0].temp);
+                assertModelsTheSame(serverModel.players[0].eventList.getEvents());
+                console.log("SUCCESS 1 of 2 (Server)");
+            })
+
+            function assertModelsTheSame(model) {
+                if (!this.firstModel) {
+                    this.firstModel = model;
+                } else {
+                    console.log("ASSERT SAME: ", model, this.firstModel);
+                    assert(deepEq(this.firstModel, model));
+                }
+            }
+
+            function deepEq(first, second) {
+                return JSON.stringify(first) == JSON.stringify(second);
+            }
+        }
+
+
+
+        function assert(condition, message) {
+            if (!condition) {
+                message = message || "Assertion failed";
+                if (typeof Error !== "undefined") {
+                    throw new Error(message);
+                }
+                throw message; // Fallback
+            }
+        }
     </script>
 </body>
 </html>
