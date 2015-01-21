@@ -1,19 +1,54 @@
 <html>
 <head>
-    <style type="text/css">
-
-    </style>    
+    <link rel="stylesheet" type="text/css" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 
-<title>Test View</title>
+<section id="start-view-container", class="form-container">
+    <form class="col-md-12" id="username-form">
+      <div class="form-group">
+        <label for="exampleInputEmail1">Pick a username</label>
+        <input type="username" class="form-control" id="username" placeholder="Ex: AwesomeHamster27">
+      </div>
+      <input type="submit" class="btn btn-default" value="Enter Lobby">
+    </form>
+</section>
+
+<section id="lobby-view-container" class="form-container">
+    <div class="col-md-12">
+      <div class="alert alert-info">Your name is <strong class="username-value"></strong></div>
+      <div class="panel panel-default">
+        <div class="panel-heading">Online Users</div>
+        <div class="list-group" id="online-users"></div>
+      </div>
+        <span class="note">Click to Challenge</span>
+    </div>
+</section>
+
+<section id="waiting-view-container" class="form-container">
+    <div class="col-md-12">
+      <div class="alert alert-info">Waiting for <strong class="username-challenged-value">user</strong> to respond</div>
+    </div>
+</section>
+
+<section id="game-view-container">
+  <canvas id="game-canvas"></canvas>
+</section>
+
 <canvas id="canvas">
 </canvas>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src="http://cdn.pubnub.com/pubnub-3.7.1.min.js"></script>
-<script src="../pubnubWrapper.js"></script>
-<script src="../models.js"></script>
+<script src="game/pubnubWrapper.js"></script>
+<script src="game/models.js"></script>
+<script src="game/gameController.js"></script>
+<script src="game/view.js"></script>
 <script type="text/javascript" src="https://code.createjs.com/easeljs-0.8.0.min.js"></script>
-<script src="./game.js"></script>
+<script src="game/game.js"></script>
+<script src="lobby.js"></script>
+<script>
+
+</script>
 </body>
 </html>

@@ -1,0 +1,14 @@
+.form-container {
+    padding: 3em;
+}
+
+#online-users li:hover {
+    cursor: pointer;
+    background-color: lightblue;
+    transition: all 0.2s;
+}
+
+.note {
+    margin-top: 1em;
+    font-style: italic;
+}

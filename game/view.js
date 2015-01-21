@@ -3,22 +3,37 @@ var GameView;
 (function gameView() {
     GameView = function(model, htmlOpt) {
         this._model = model;
+        console.log("HTML OPT: ", htmlOpt);
         this._canvas = document.querySelector(htmlOpt.canvas);
 
         this._canvas.width = 500;
         this._canvas.height = 500;
         this._stage = new createjs.Stage(this._canvas);
 
-        // Link model to View
-        for (var i = model.players.length - 1; i >= 0; i--) {
-            var player = new PlayerView(model.players[i], this._stage);
-        }
+        var _this = this;
+        this.start = function() {
+            this._players = [];
+            for (var i = model.players.length - 1; i >= 0; i--) {
+                var player = new PlayerView(model.players[i], this._stage);
+                this._players.push(player);
+            }
+
+            setInterval(function() {
+                _this.rebuildView();
+            }, 50);
+        };
     };
     GameView.prototype = {
         // Erases old view and build new one
+        // TODO: rewrite with containerand clearview
         rebuildView: function() {
-            this.redrawPath();
+            this.clearView();
+            //this.redrawPath();
             this.redrawUsers();
+        },
+
+        clearView: function() {
+            this._stage.removeAllChildren();
         },
 
         // Adds additional lines and moves user
@@ -29,12 +44,19 @@ var GameView;
 
         redrawPath: function() {
             lines = getLinesFromEvents();
+        },
+
+        redrawUsers: function() {
+            for (var i = this._players.length - 1; i >= 0; i--) {
+                this._players[i].rebuildView();
+            }
         }
     };
 
     PlayerView = function(model, stage) {
         this._stage = stage;
         this._model = model;
+        console.log("PLAYER MODEL: ", model);
         model.onChange = this.rebuildView;
         this.rebuildView();
     };
@@ -51,14 +73,15 @@ var GameView;
         },
 
         redrawPath: function() {
-            lines = getLinesFromEvents(this._model.events);
+            console.log("MODEL NOW: ", this._model);
+            lines = getLinesFromEvents(this._model.eventList.getEvents());
             this.drawLines(lines);
             console.log("LINES: ", lines);
 
         },
 
         redrawIcon: function() {
-            finalLocation = finalLocationFromEvents(this._model.events);
+            finalLocation = finalLocationFromEvents(this._model.eventList.getEvents());
             //drawIconAt(this._stage, finalLocation);
         },
 
@@ -86,10 +109,13 @@ var GameView;
     /* Location */
     function finalLocationFromEvents(events) {
         lines = getLinesFromEvents(events); // Very ineffecient
-        return lines[lines.length - 1].end;
+        return lines.length > 0 ? lines[lines.length - 1].end : null;
     }
 
     function getLinesFromEvents(events) {
+        if (events.length === 0) {
+            return 0;
+        }
         var lines = [];
         var lastLocation = {x: 10, y: 10}; // FIXME: This should come from somwhere else
         for (var i = 0; i < events.length - 1; i++) {

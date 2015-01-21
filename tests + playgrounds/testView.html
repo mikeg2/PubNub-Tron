@@ -11,7 +11,7 @@
 </canvas>
 
 <script type="text/javascript" src="https://code.createjs.com/easeljs-0.8.0.min.js"></script>
-<script src="../view.js"></script>
+<script src="../game/view.js"></script>
 <script>
     var currentTime = new Date().getTime();
     new GameView({
@@ -34,7 +34,7 @@
         ]
     }, {
         canvas: '#canvas'
-    })
+    }).start();
 </script>
 </body>
 </html>
