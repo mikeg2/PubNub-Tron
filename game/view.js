@@ -5,22 +5,33 @@ var GameView;
         this._model = model;
         console.log("HTML OPT: ", htmlOpt);
         this._canvas = document.querySelector(htmlOpt.canvas);
-
-        this._canvas.width = 500;
-        this._canvas.height = 500;
         this._stage = new createjs.Stage(this._canvas);
 
         var _this = this;
         this.start = function() {
+            model.onGameWidthUpdated = function() {
+                _this._canvas.width = model.gameWidth;
+            };
+            model.onGameWidthUpdated();
+
+            model.onGameHeightUpdated = function() {
+                _this._canvas.height = model.gameHeight;
+            };
+            model.onGameHeightUpdated();
+
             this._players = [];
             for (var i = model.players.length - 1; i >= 0; i--) {
                 var player = new PlayerView(model.players[i], this._stage);
                 this._players.push(player);
             }
 
-            setInterval(function() {
+            _this.loop = setInterval(function() {
                 _this.rebuildView();
             }, 50);
+        };
+
+        this.stop = function() {
+            clearInterval(_this.loop);
         };
     };
     GameView.prototype = {
@@ -50,6 +61,11 @@ var GameView;
             for (var i = this._players.length - 1; i >= 0; i--) {
                 this._players[i].rebuildView();
             }
+        },
+
+        // Ideally, this function would not be in the view, but it's impractical for it not to be
+        arePlayersIntersecting: function() {
+
         }
     };
 
@@ -63,6 +79,7 @@ var GameView;
     PlayerView.prototype = {
 
         rebuildView: function() {
+            this.redrawBackground();
             this.redrawPath();
             this.redrawIcon();
         },
@@ -72,11 +89,16 @@ var GameView;
             this.updateLines();
         },
 
+        redrawBackground: function() {
+            var background = new createjs.Shape();
+            background.graphics.beginFill('black');
+            background.graphics.rect(0, 0, 10000, 10000);
+            this._stage.addChildAt(background, 0);
+        },
+
         redrawPath: function() {
-            console.log("MODEL NOW: ", this._model);
             lines = getLinesFromEvents(this._model.eventList.getEvents());
             this.drawLines(lines);
-            console.log("LINES: ", lines);
 
         },
 
@@ -96,7 +118,8 @@ var GameView;
         drawLine: function(line) {
             var lineGraphic = new createjs.Shape();
             lineGraphic.graphics.setStrokeStyle(5);
-            lineGraphic.graphics.beginStroke('black');
+            console.log("MODEL W/ COLOR: ", this._model);
+            lineGraphic.graphics.beginStroke(this._model.color);
             lineGraphic.graphics.moveTo(line.start.x, line.start.y);
             lineGraphic.graphics.lineTo(line.end.x, line.end.y);
             lineGraphic.graphics.endStroke();
@@ -105,87 +128,5 @@ var GameView;
         }
 
     };
-
-    /* Location */
-    function finalLocationFromEvents(events) {
-        lines = getLinesFromEvents(events); // Very ineffecient
-        return lines.length > 0 ? lines[lines.length - 1].end : null;
-    }
-
-    function getLinesFromEvents(events) {
-        if (events.length === 0) {
-            return 0;
-        }
-        var lines = [];
-        var lastLocation = {x: 10, y: 10}; // FIXME: This should come from somwhere else
-        for (var i = 0; i < events.length - 1; i++) {
-            var newLocation = calcLocation(lastLocation, {
-                dir: events[i].dir,
-                time: events[i+1].time - events[i].time
-            });
-            lines.push({
-                start: lastLocation,
-                end: newLocation
-            });
-            lastLocation = newLocation;
-        }
-        var lastEvent = events[events.length - 1];
-        var currentLocation = calcLocation(lastLocation, {
-            dir: lastEvent.dir,
-            time: new Date().getTime() - lastEvent.time
-        });
-        lines.push({
-            start: lastLocation,
-            end: currentLocation
-        });
-        return lines;
-    }
-
-    function calcLocation(startPos, info) {
-        var distance = distanceTraveled(info);
-        return calcMove(startPos, info.dir, distance);
-    }
-
-    function calcMove(startPos, dir, distance) {
-        var delta = calcDelta(dir, distance);
-        return {
-            x: startPos.x + delta.x,
-            y: startPos.y + delta.y
-        };
-    }
-
-    function calcDelta(dir, distance) {
-        console.log("dir: ", dir, " DISTANCE: ", distance);
-        if (dir == 'l') {
-            return {
-                x: -distance,
-                y: 0
-            };
-        } else if (dir == 'r') {
-            return {
-                x: distance,
-                y: 0
-            };
-        } else if (dir == 'u') {
-            return {
-                x: 0,
-                y: -distance
-            };
-        } else if (dir == 'd') {
-            return {
-                x: 0,
-                y: distance
-            };
-        }
-        return {
-            x: -1,
-            y: -1,
-        };
-    }
-
-    function distanceTraveled(info) {
-        return info.time * 0.05; //CONFIG.PLAYER_SPEED || 5;
-    }
-
 
 })();

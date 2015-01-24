@@ -140,12 +140,15 @@ function challenge(myId, username, userId) {
 
 function handleChallengeRequest(challenge) {
     var response = confirm(challenge.username + " is challenging you to a game. Press OK to accept or Cancel to deny?");
-    var privateChannel = respondToChallenge(challenge, response);
+    var info = respondToChallenge(challenge, response);
+    var privateChannel = info.privateChannel;
+    var startTime = info.startTime;
     if (response) {
         waitForGameToStart({
             channel: privateChannel,
             server: true,
-            opponentId: challenge.uuid
+            opponentId: challenge.uuid,
+            startTime: startTime
         });
     }
 
@@ -153,6 +156,7 @@ function handleChallengeRequest(challenge) {
 
 function respondToChallenge(challenge, response) {
     var privateChannel = response ? randomString(10) : undefined;
+    var startTime = new Date().getTime() + 2000;
     pubnub.publish({
         channel: LOBBY_NAME,
         message: {
@@ -161,11 +165,15 @@ function respondToChallenge(challenge, response) {
                 accepted: response,
                 uuid: challenge.target,
                 target: challenge.uuid,
-                privateChannel: privateChannel
+                privateChannel: privateChannel,
+                startTime: startTime // FIXME: This is a lazzy way to make sure both models are ready
             }
         }
     });
-    return privateChannel;
+    return {
+        privateChannel: privateChannel,
+        startTime: startTime
+    };
 }
 
 function handleChallengeResponse(challengeResponse) {
@@ -177,6 +185,7 @@ function handleChallengeResponse(challengeResponse) {
             channel: challengeResponse.privateChannel,
             server: false,
             opponentId: challengeResponse.uuid,
+            startTime: challengeResponse.startTime
         });
     } else {
         lobbyView();
@@ -187,7 +196,7 @@ function waitForGameToStart(config) {
     gameView();
     config.canvas = "#game-canvas";
     config.myId = MY_UUID;
-    Game.create(config).startGame(); // should wait until agreed upon time
+    Game.create(config).startGame(config.startTime);
 }
 
 /* Views */
