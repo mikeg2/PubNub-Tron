@@ -156,7 +156,7 @@ function handleChallengeRequest(challenge) {
 
 function respondToChallenge(challenge, response) {
     var privateChannel = response ? randomString(10) : undefined;
-    var startTime = new Date().getTime() + 2000;
+    var startTime = new Date().getTime() + 1000;
     pubnub.publish({
         channel: LOBBY_NAME,
         message: {
