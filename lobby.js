@@ -7,7 +7,8 @@ var BASE_CHANNEL_NAME = "demo";
 var CONNECTION_SETTINGS = {
         publish_key: 'pub-c-b5297e29-6bc0-49a8-8af9-6f8b2419f048',
         subscribe_key: 'sub-c-e96aef6a-9ba2-11e4-951c-0619f8945a4f',
-        uuid: MY_UUID
+        uuid: MY_UUID,
+        origin: pubsub.pubnub.com
     };
 
 var pubnub = PUBNUB.init(CONNECTION_SETTINGS);
