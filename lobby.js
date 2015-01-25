@@ -180,7 +180,6 @@ function handleChallengeResponse(challengeResponse) {
     var response = challengeResponse.accepted;
     console.log("RESPONSE: ", response);
     if (response) {
-        leaveLobby();
         waitForGameToStart({
             channel: challengeResponse.privateChannel,
             server: false,
@@ -193,6 +192,7 @@ function handleChallengeResponse(challengeResponse) {
 }
 
 function waitForGameToStart(config) {
+    leaveLobby();
     gameView();
     config.canvas = "#game-canvas";
     config.myId = MY_UUID;
