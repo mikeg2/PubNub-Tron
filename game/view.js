@@ -27,7 +27,7 @@ var GameView;
 
             _this.loop = setInterval(function() {
                 _this.rebuildView();
-            }, 50);
+            }, 70);
         };
 
         this.stop = function() {
@@ -117,7 +117,7 @@ var GameView;
 
         drawLine: function(line) {
             var lineGraphic = new createjs.Shape();
-            lineGraphic.graphics.setStrokeStyle(5);
+            lineGraphic.graphics.setStrokeStyle(this._model.thickness);
             console.log("MODEL W/ COLOR: ", this._model);
             lineGraphic.graphics.beginStroke(this._model.color);
             lineGraphic.graphics.moveTo(line.start.x, line.start.y);

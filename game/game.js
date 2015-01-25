@@ -97,6 +97,8 @@ PLAYER_COLORS = [
     '#f76d2f'
 ];
 
+PLAYER_THICKNESS = 5;
+
 
 function getInitializer(config) {
     return config.server ? initializer : function(a, b) {};
@@ -113,20 +115,21 @@ function initializer(model, startTime) {
             time: startTime
         });
         player.color = PLAYER_COLORS[i];
+        player.thickness = PLAYER_THICKNESS;
     }
 }
 
 /* Rules Enforcer */
 
 //TODO: Cache this somehow
-function RuleEnforcer(model, view, gameOver) {
+function RuleEnforcer(model, gameOver) {
     this._model = model;
     this.start = function() {
         this.loop = setInterval(function() {
-            if (false) {
+            if (isCollision(model) || areOverBounds(model)) {
                 gameOver();
             }
-        }, 30);
+        }, 100);
     };
     this.stop = function() {
         clearInterval(this.loop);
@@ -134,24 +137,26 @@ function RuleEnforcer(model, view, gameOver) {
 }
 
 function isCollision(model) {
-    return isIntersectionFromEvents(model.players[0].eventList.getEvents(), model.players[1].eventList.getEvents());
+    return isIntersectionFromEvents(model.players[0], model.players[1]);
 }
 
-function isIntersectionFromEvents(events1, events2) {
-    var lines1 = getLinesFromEvents(events1);
-    var lines2 = getLinesFromEvents(events2);
-    return areLinesIntersecting(lines1, lines2) || areLinesIntersecting(lines1, lines1) || areLinesIntersecting(lines2, lines2);
+function isIntersectionFromEvents(player1, player2) {
+    var lines1 = getLinesFromEvents(player1.eventList.getEvents());
+    lines1.thickness = player1.thickness;
+    var lines2 = getLinesFromEvents(player2.eventList.getEvents());
+    lines2.thickness = player2.thickness;
+    return areThickLinesIntersecting(lines1, lines2); //|| areThickLinesIntersecting(lines1, lines1) || areThickLinesIntersecting(lines2, lines2);
 }
 
-function areLinesIntersecting(lines1, lines2) {
-    if(lines1 == lines2) {
-        console.log("SAME LINE: ");
-    }
+function areThickLinesIntersecting(lines1, lines2) {
+    console.log("ARE LINES INTERESTING");
     for (var i = lines1.length - 1; i >= 0; i--) {
         var l1 = lines1[i];
-        for (var j = lines2.length - 1; i >= 0; i--) {
+        l1.thickness = l1.thickness || lines1.thickness;
+        for (var j = lines2.length - 1; j >= 0; j--) {
             var l2 = lines2[j];
-            if (areIntersecting(l1, l2) || areCollinearIntersect(l1, l2)) {
+            l2.thickness = l2.thickness || lines2.thickness;
+            if (areThickIntersecting(l1, l2)) {
                 return true;
             }
         }
@@ -160,68 +165,64 @@ function areLinesIntersecting(lines1, lines2) {
     return false;
 }
 
-function areIntersecting(line1, line2) {
-    console.log("L1: ", JSON.stringify(line1), " L2: ", line2);
-    var p1 = line1.start;
-    var p2 = line1.end;
-    var p3 = line2.start;
-    var p4 = line2.end;
-    return lineIntersect(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y);
+function areThickIntersecting(line1, line2) {
+    var rect1 = convertThickLineToRect(line1);
+    var rect2 = convertThickLineToRect(line2);
+    console.log("RECT1: ", rect1, " RECT2: ", rect2);
+    return areRectsOverlapping(rect1, rect2);
 }
 
-function lineIntersect(x1,y1,x2,y2, x3,y3,x4,y4) {
-    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
-    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
-    if (isNaN(x)||isNaN(y)) {
-        return false;
+function convertThickLineToRect(line) {
+    if(isVirtical(line)) {
+        var x = line.start.x;
+        return {
+            left: x - 0.5 * line.thickness,
+            right: x + 0.5 * line.thickness,
+            top: line.start.y < line.end.y ? line.start.y : line.end.y,
+            bottom: line.start.y > line.end.y ? line.start.y : line.end.y
+        };
     } else {
-        if (x1>=x2) {
-            if (!(x2<=x&&x<=x1)) {return false;}
-        } else {
-            if (!(x1<=x&&x<=x2)) {return false;}
-        }
-        if (y1>=y2) {
-            if (!(y2<=y&&y<=y1)) {return false;}
-        } else {
-            if (!(y1<=y&&y<=y2)) {return false;}
-        }
-        if (x3>=x4) {
-            if (!(x4<=x&&x<=x3)) {return false;}
-        } else {
-            if (!(x3<=x&&x<=x4)) {return false;}
-        }
-        if (y3>=y4) {
-            if (!(y4<=y&&y<=y3)) {return false;}
-        } else {
-            if (!(y3<=y&&y<=y4)) {return false;}
+        var y = line.start.y;
+        console.log("thickness", line.thickness);
+        return {
+            top: y - 0.5 * line.thickness,
+            bottom: y + 0.5 * line.thickness,
+            left: line.start.x < line.end.x ? line.start.x : line.end.x,
+            right: line.start.x > line.end.x ? line.start.x : line.end.x
+        };
+    }
+}
+
+function isVirtical(line) {
+    return line.end.x == line.start.x;
+}
+
+function areRectsOverlapping(a, b) {
+  return (a.left <= b.right &&
+          b.left <= a.right &&
+          a.top <= b.bottom &&
+          b.top <= a.bottom);
+}
+
+function areOverBounds(model) {
+    var bounds = {
+        width: model.gameWidth,
+        height: model.gameHeight
+    };
+    for (var i = model.players.length - 1; i >= 0; i--) {
+        var player = model.players[i];
+        if(isOverBounds(player, bounds)) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
-function areCollinearIntersection(line1, line2) {
-    return areCollinear(line1, line2) && line1.start < line2.end;
-}
-
-function areCollinear(line1, line2) {
-    var points = [line1.start, line1.end, line2.start, line2.end];
-    var xCo = linXcoefficient(points[0], points[1]);
-    var constCo = linConstant(points[0], points[1]);
-    for (var i = points.length - 2; i >= 1; i--) {
-        var iterXco = linXcoefficient(points[i], points[i+1]);
-        var iterConstCo = linConstant(points[i], points[i+1]);
-        if(iterXco != xCo || iterConstCo != constCo) {
-            return false;
-        }
+// Does not take into account thickness
+function isOverBounds(player, bounds) {
+    var loc = finalLocationFromEvents(player.eventList.getEvents());
+    if (loc.x < 0 || loc.x > bounds.width || loc.y < 0 || loc.y > bounds.height) {
+        return true;
     }
-    return true;
-}
-
-// could be NaN, but that should not cause problems, right?
-function linXcoefficient(p1, p2) {
-    return (p1.y - p2.y)/(p1.x - p2.x);
-}
-
-function linConstant(p1, p2) {
-    return linXcoefficient(p1, p2) * p1.x + p1.y;
+    return false;
 }

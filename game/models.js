@@ -60,7 +60,7 @@ var ServerModel;
     /*------Client Properties-----*/
     var AbstractPlayer = function(channel) {
         defineModelProperties(this,
-            ['color'], {
+            ['color', 'thickness'], {
                 channel: channel
             });
     };
