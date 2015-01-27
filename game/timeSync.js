@@ -43,7 +43,7 @@ timeSync = {
 function calcMedian(values) {
     values.sort( function(a,b) {return a - b;} );
     var half = Math.floor(values.length/2);
- 
+
     if(values.length % 2)
         return values[half];
     else
@@ -83,4 +83,4 @@ function roundToEven(num) {
 
 timeSync.aheadBySamples = [];
 
-timeSync.init(150, 50);
+timeSync.init(50, 250);
