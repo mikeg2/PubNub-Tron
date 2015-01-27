@@ -28,7 +28,12 @@ var GameView;
             console.log("RUNNING VIEW LOOP");
             _this.loop = setInterval(function() {
                 _this.refreshView();
-            }, 70);
+                //_this.rebuildView();
+            }, 50);
+            model.onPlayerChange(function() {
+                _this.rebuildView();
+            });
+            _this.rebuildView();
         };
 
         this.stop = function() {
@@ -41,6 +46,15 @@ var GameView;
         rebuildView: function() {
             this.clearView();
             this.redrawUsers();
+            this.redrawBackground(); // calling last ensures its at the bottom of z order
+            this._stage.update();
+        },
+
+        redrawBackground: function() {
+            var background = new createjs.Shape();
+            background.graphics.beginFill('black');
+            background.graphics.rect(0, 0, 10000, 10000);
+            this._stage.addChildAt(background, 0);
         },
 
         clearView: function() {
@@ -69,17 +83,11 @@ var GameView;
         this._stage = stage;
         this._model = model;
         this._cache = {};
-        var _this = this;
-        model.onChange(function() {
-            _this.rebuildView();
-        });
-        this.rebuildView();
     };
     PlayerView.prototype = {
 
         rebuildView: function() {
             console.log("REBUILDING VIEW");
-            this.redrawBackground();
             this.redrawPath();
             this.redrawIcon();
         },
@@ -90,19 +98,12 @@ var GameView;
             this.updateLastLine();
         },
 
-        redrawBackground: function() {
-            var background = new createjs.Shape();
-            background.graphics.beginFill('black');
-            background.graphics.rect(0, 0, 10000, 10000);
-            this._stage.addChildAt(background, 0);
-        },
-
         redrawPath: function() {
             var lines = getLinesFromEvents(this._model.eventList.getEvents());
             var lineGrapics = this.drawLines(lines);
             console.log("LAST LINE MODEL", lines[lines.length - 1]);
             this._cache.lastLineModel = lines[lines.length - 1];
-            this._cache.lastLineGraphic = lineGrapics[lineGrapics.length - 1];
+            this._cache.lastLineGraphic = lineGrapics[0];
         },
 
         redrawIcon: function() {
@@ -126,7 +127,6 @@ var GameView;
                 var line = lines[i];
                 allLines.push(this.drawLine(line));
             }
-            this._stage.update();
             return allLines;
         },
 
@@ -145,3 +145,5 @@ var GameView;
     };
 
 })();
+
+var globalPlayer;

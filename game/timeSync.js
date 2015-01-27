@@ -83,4 +83,4 @@ function roundToEven(num) {
 
 timeSync.aheadBySamples = [];
 
-timeSync.init(10, 500);
+timeSync.init(15, 500);

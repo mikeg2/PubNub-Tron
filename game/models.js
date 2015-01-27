@@ -18,6 +18,7 @@ var ServerModel;
             });
         this.gameOver = false;
 
+        setupCallback(this, 'onPlayerChange');
         // getChannel(config.channelBase).listen(
         //     function(message, env, channel) {
         //         if (message.ready && message.id == _this.id) {  // Assumes only one other model
@@ -33,8 +34,9 @@ var ServerModel;
     ServerModel = function(config) {
         var _this = this;
         AbstractModel.call(this, config);
-        this.addPlayer = function(player, isMe) {
+        this.addPlayer = function(player, isMe) { // TODO: Remove duplication
             var newPlayer = new ServerPlayer(player, config.channelBase);
+            newPlayer.onChange(_this.callOnPlayerChange);
             if (isMe) {
                 this.me = newPlayer;
             }
@@ -48,6 +50,7 @@ var ServerModel;
         AbstractModel.call(this, config);
         this.addPlayer = function(player, isMe) {
             var newPlayer = new ClientPlayer(player, config.channelBase); // TODO: Remove duplication
+            newPlayer.onChange(_this.callOnPlayerChange);
             if (isMe) {
                 this.me = newPlayer;
             }
@@ -96,7 +99,7 @@ var ServerModel;
             cbs.push(cb);
         };
         obj["call" + capitalize(cbName)] = function() {
-            console.log(cbs);
+            console.log("CALL CB: ", cbs);
             for (var i = cbs.length - 1; i >= 0; i--) {
                 cbs[i]();
             }
