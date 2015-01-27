@@ -278,7 +278,7 @@ var ServerModel;
              * Converts request into event by updating ".time" to current "server" time.
              */
             var updateTimeReqToEvent = function (req) {
-                req.time = new Date().getTime(); // TODO: Should duplicate objects
+                req.time = timeSync.now(); // TODO: Should duplicate objects
                 return req;
             };
 
@@ -339,7 +339,7 @@ var ServerModel;
     }
 
     function addTimeToEvent(anEvent) {
-        anEvent.time = anEvent.time || new Date().getTime();
+        anEvent.time = anEvent.time || timeSync.now();
     }
 
 })();

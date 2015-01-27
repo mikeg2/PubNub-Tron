@@ -13,6 +13,37 @@ function getFinalLocation(eventsSorted, startingState) {
 
 }
 
+/* Cached Location */
+
+var LOCATION_CACHE = {};
+
+function getCacheLinesFromEvents(events, id, withinMilli) {
+    return getCachedLinesFromEventsWithin(id, withinMilli) || getCachableLinesFromEvents(events, id);
+}
+
+function getCachedLinesFromEventsWithin(id, milliseconds) {
+    var after = timeSync.now() - milliseconds;
+    return getCachedLinesFromEventsAfter(after);
+}
+
+function getCachedLinesFromEventsAfter(id, time) {
+    if (LOCATION_CACHE[id] && LOCATION_CACHE[id].time >= time) {
+        return LOCATION_CACHE[id].lines;
+    }
+    return undefined;
+}
+
+function getCachableLinesFromEvents(events, id) {
+    var lines = getLinesFromEvents(events);
+    LOCATION_CACHE[id] = LOCATION_CACHE[id] || [];
+    LOCATION_CACHE[id] = {
+        lines: lines,
+        id: id,
+        time: timeSync.now()
+    };
+    return lines;
+}
+
 /* Location */
 function finalLocationFromEvents(events) {
     lines = getLinesFromEvents(events); // Very ineffecient
@@ -43,7 +74,7 @@ function getLinesFromEvents(events) {
     lastLocation = lastLocation || lastEvent.loc;
     var currentLocation = calcLocation(lastLocation, {
         dir: lastEvent.dir,
-        time: new Date().getTime() - lastEvent.time
+        time: timeSync.now() - lastEvent.time
     });
     lines.push({
         start: lastLocation,

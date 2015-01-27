@@ -18,7 +18,7 @@ var Game = function(model, view, controller, initializer, enf) {
             if(enf) {
                 _this._ruleEnforcer.start();
             }
-        }, time - new Date().getTime());
+        }, time - timeSync.now());
     };
 
     this._model.onGameOverUpdated = function() {
@@ -125,38 +125,51 @@ function initializer(model, startTime) {
 function RuleEnforcer(model, gameOver) {
     this._model = model;
     this.start = function() {
+        var opt = {
+            cacheGive: 100
+        };
         this.loop = setInterval(function() {
-            if (isCollision(model) || areOverBounds(model)) {
+            if (isCollision(model, opt) || areOverBounds(model)) {
                 gameOver();
             }
-        }, 100);
+        }, 120);
     };
     this.stop = function() {
         clearInterval(this.loop);
     };
 }
 
-function isCollision(model) {
-    return isIntersectionFromEvents(model.players[0], model.players[1]);
+function isCollision(model, opt) {
+    return isIntersectionFromEvents(model.players[0], model.players[1], opt);
 }
 
-function isIntersectionFromEvents(player1, player2) {
-    var lines1 = getLinesFromEvents(player1.eventList.getEvents());
+function isIntersectionFromEvents(player1, player2, opt) {
+    var selfOpt = {
+        fudge: Math.pow(player1.thickness / 2, 2), // Awkword and imperfict solution to overlapping on turns
+        skipDuplicates: true
+    };
+    var lines1 = getCacheLinesFromEvents(player1.eventList.getEvents(), player1.id, opt.cacheGive || 0);
     lines1.thickness = player1.thickness;
-    var lines2 = getLinesFromEvents(player2.eventList.getEvents());
+    var lines2 = getCacheLinesFromEvents(player2.eventList.getEvents(), player2.id, opt.cacheGive || 0);
     lines2.thickness = player2.thickness;
-    return areThickLinesIntersecting(lines1, lines2); //|| areThickLinesIntersecting(lines1, lines1) || areThickLinesIntersecting(lines2, lines2);
+    return areThickLinesIntersecting(lines1, lines2) || areThickLinesIntersecting(lines1, lines1, selfOpt) || areThickLinesIntersecting(lines2, lines2, selfOpt);
 }
 
-function areThickLinesIntersecting(lines1, lines2) {
+function areThickLinesIntersecting(lines1, lines2, opt) {
+    opt = opt || {};
     console.log("ARE LINES INTERESTING");
     for (var i = lines1.length - 1; i >= 0; i--) {
         var l1 = lines1[i];
         l1.thickness = l1.thickness || lines1.thickness;
         for (var j = lines2.length - 1; j >= 0; j--) {
             var l2 = lines2[j];
+            if (opt.skipDuplicates && l1 === l2) {
+                console.log("SKIP DUPLICATES");
+                continue;
+            }
+            console.log("NOT DUPLICATES: ", l1, " ", l2);
             l2.thickness = l2.thickness || lines2.thickness;
-            if (areThickIntersecting(l1, l2)) {
+            if (areThickIntersecting(l1, l2, opt.fudge)) {
                 return true;
             }
         }
@@ -165,11 +178,13 @@ function areThickLinesIntersecting(lines1, lines2) {
     return false;
 }
 
-function areThickIntersecting(line1, line2) {
+function areThickIntersecting(line1, line2, fudge) {
     var rect1 = convertThickLineToRect(line1);
     var rect2 = convertThickLineToRect(line2);
     console.log("RECT1: ", rect1, " RECT2: ", rect2);
-    return areRectsOverlapping(rect1, rect2);
+    console.log("FUDGE: ", fudge);
+    return areRectsOverlapping(rect1, rect2) &&
+        (!fudge || calcOverlappingArea(rect1, rect2) > fudge);
 }
 
 function convertThickLineToRect(line) {
@@ -198,10 +213,17 @@ function isVirtical(line) {
 }
 
 function areRectsOverlapping(a, b) {
-  return (a.left <= b.right &&
-          b.left <= a.right &&
-          a.top <= b.bottom &&
-          b.top <= a.bottom);
+  return (a.left < b.right &&
+          b.left < a.right &&
+          a.top < b.bottom &&
+          b.top < a.bottom);
+}
+
+function calcOverlappingArea(a, b) {
+    x_overlap = Math.max(0, Math.min(a.right,b.right) - Math.max(a.left,b.left));
+    y_overlap = Math.max(0, Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top));
+    overlapArea = x_overlap * y_overlap;
+    return overlapArea;
 }
 
 function areOverBounds(model) {

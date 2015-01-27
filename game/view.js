@@ -72,7 +72,6 @@ var GameView;
     PlayerView = function(model, stage) {
         this._stage = stage;
         this._model = model;
-        console.log("PLAYER MODEL: ", model);
         model.onChange = this.rebuildView;
         this.rebuildView();
     };
@@ -118,7 +117,6 @@ var GameView;
         drawLine: function(line) {
             var lineGraphic = new createjs.Shape();
             lineGraphic.graphics.setStrokeStyle(this._model.thickness);
-            console.log("MODEL W/ COLOR: ", this._model);
             lineGraphic.graphics.beginStroke(this._model.color);
             lineGraphic.graphics.moveTo(line.start.x, line.start.y);
             lineGraphic.graphics.lineTo(line.end.x, line.end.y);
