@@ -12,6 +12,7 @@ var Game = function(model, view, controller, initializer, enf) {
     this.startGame = function(time) {
         console.log("TIME: ", time);
         setTimeout(function() {
+            console.log("STARTING GAME");
             initializer(_this._model); // Rethink program structure
             _this._view.start();
             _this._controller.start();

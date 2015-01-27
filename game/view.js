@@ -25,6 +25,7 @@ var GameView;
                 this._players.push(player);
             }
 
+            console.log("RUNNING VIEW LOOP");
             _this.loop = setInterval(function() {
                 _this.rebuildView();
             }, 70);
@@ -78,6 +79,7 @@ var GameView;
     PlayerView.prototype = {
 
         rebuildView: function() {
+            console.log("REBUILDING VIEW");
             this.redrawBackground();
             this.redrawPath();
             this.redrawIcon();
