@@ -66,21 +66,34 @@ function getLinesFromEvents(events) {
         });
         lines.push({
             start: lastLocation,
-            end: newLocation
+            end: newLocation,
+            startEvent: events[i].time
         });
         lastLocation = newLocation;
-    }
+    } // TODO: Remove code duplication
     var lastEvent = events[events.length - 1];
     lastLocation = lastLocation || lastEvent.loc;
     var currentLocation = calcLocation(lastLocation, {
         dir: lastEvent.dir,
-        time: timeSync.now() - lastEvent.time
+        time: timeSync.now() - lastEvent.time,
     });
     lines.push({
         start: lastLocation,
-        end: currentLocation
+        end: currentLocation,
+        startEvent: lastEvent
     });
     return lines;
+}
+
+function updateLineTo(lastLine, now) {
+    return {
+        start: lastLine.start,
+        end: calcLocation(lastLine.start, {
+            dir: lastLine.startEvent.dir,
+            time: now - lastLine.startEvent.time
+        }),
+        startEvent: lastLine.startEvent
+    };
 }
 
 function calcLocation(startPos, info) {

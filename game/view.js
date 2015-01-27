@@ -27,7 +27,7 @@ var GameView;
 
             console.log("RUNNING VIEW LOOP");
             _this.loop = setInterval(function() {
-                _this.rebuildView();
+                _this.refreshView();
             }, 70);
         };
 
@@ -40,7 +40,6 @@ var GameView;
         // TODO: rewrite with containerand clearview
         rebuildView: function() {
             this.clearView();
-            //this.redrawPath();
             this.redrawUsers();
         },
 
@@ -50,12 +49,7 @@ var GameView;
 
         // Adds additional lines and moves user
         refreshView: function() {
-            this.updatePlayerLocations();
-            this.updateLines(); // Only draw new ones since last turn
-        },
-
-        redrawPath: function() {
-            lines = getLinesFromEvents();
+            this.refreshPlayers();
         },
 
         redrawUsers: function() {
@@ -64,16 +58,21 @@ var GameView;
             }
         },
 
-        // Ideally, this function would not be in the view, but it's impractical for it not to be
-        arePlayersIntersecting: function() {
-
+        refreshPlayers: function() {
+            for (var i = this._players.length - 1; i >= 0; i--) {
+                this._players[i].refreshView();
+            }
         }
     };
 
     PlayerView = function(model, stage) {
         this._stage = stage;
         this._model = model;
-        model.onChange = this.rebuildView;
+        this._cache = {};
+        var _this = this;
+        model.onChange(function() {
+            _this.rebuildView();
+        });
         this.rebuildView();
     };
     PlayerView.prototype = {
@@ -86,8 +85,9 @@ var GameView;
         },
 
         refreshView: function() {
+            console.log("REFRESH VIEW");
             this.redrawIcon();
-            this.updateLines();
+            this.updateLastLine();
         },
 
         redrawBackground: function() {
@@ -98,22 +98,36 @@ var GameView;
         },
 
         redrawPath: function() {
-            lines = getLinesFromEvents(this._model.eventList.getEvents());
-            this.drawLines(lines);
-
+            var lines = getLinesFromEvents(this._model.eventList.getEvents());
+            var lineGrapics = this.drawLines(lines);
+            console.log("LAST LINE MODEL", lines[lines.length - 1]);
+            this._cache.lastLineModel = lines[lines.length - 1];
+            this._cache.lastLineGraphic = lineGrapics[lineGrapics.length - 1];
         },
 
         redrawIcon: function() {
-            finalLocation = finalLocationFromEvents(this._model.eventList.getEvents());
+            //finalLocation = finalLocationFromEvents(this._model.eventList.getEvents());
             //drawIconAt(this._stage, finalLocation);
         },
 
+        updateLastLine: function() {
+            if (!this._cache.lastLineModel) {
+                return;
+            }
+            var lastLineModel = updateLineTo(this._cache.lastLineModel, timeSync.now());
+            this._stage.removeChild(this._cache.lastLineGraphic);
+            this.drawLine(lastLineModel);
+            this._stage.update();
+        },
+
         drawLines: function(lines) {
+            var allLines = [];
             for (var i = lines.length - 1; i >= 0; i--) {
                 var line = lines[i];
-                this.drawLine(line);
+                allLines.push(this.drawLine(line));
             }
             this._stage.update();
+            return allLines;
         },
 
         drawLine: function(line) {
@@ -125,6 +139,7 @@ var GameView;
             lineGraphic.graphics.endStroke();
             // var roundedEnds = Implement to get ride of sharp edge
             this._stage.addChild(lineGraphic);
+            return lineGraphic;
         }
 
     };
