@@ -9,17 +9,14 @@ var Game = function(model, view, controller, initializer, enf) {
         _this.onReady(_this);
     }; // Won't work if model calls before onReady is set
 
-    this.startGame = function(time) {
-        console.log("TIME: ", time);
-        setTimeout(function() {
-            console.log("STARTING GAME");
-            initializer(_this._model); // Rethink program structure
-            _this._view.start();
-            _this._controller.start();
-            if(enf) {
-                _this._ruleEnforcer.start();
-            }
-        }, time - timeSync.now());
+    this.startGame = function() {
+        console.log("STARTING GAME");
+        initializer(_this._model); // Rethink program structure
+        _this._view.start();
+        _this._controller.start();
+        if(enf) {
+            _this._ruleEnforcer.start();
+        }
     };
 
     this._model.onGameOverUpdated = function() {
@@ -249,3 +246,74 @@ function isOverBounds(player, bounds) {
     }
     return false;
 }
+
+/* Game Starter: Make sure games started in right order */
+
+function waitForClientsReady(clients, channel, cb) {
+    var waitingInterval = setInterval(function() {
+        clientsAreReady(clients, channel, function(areReady) {
+            console.log("ARE READY: ", areReady);
+            if (areReady) {
+                console.log("ARE READY!");
+                cb();
+                clearInterval(waitingInterval);
+            }
+        });
+    }, 150);
+}
+
+// TODO: Redo this with presence api instead
+function clientsAreReady(clients, channel, cb) {
+    async.map(clients, function(clientId, iterCb) {
+        pubnub.state({
+            channel: channel,
+            uuid: clientId,
+            callback: function(m) {
+                console.log("ARE READY ITER: ", m.isReady, " ON: ", channel);
+                var isReady = m.isReady;
+                iterCb(undefined, isReady);
+            }
+        });
+    }, function(err, areReady) {
+        console.log("ARE READY ARRAY: ", areReady);
+        if (err) {
+            alert("ERROR!");
+            stop();
+        }
+        for (var i = areReady.length - 1; i >= 0; i--) {
+            if(!areReady[i])
+                return cb(false);
+        }
+        return cb(true);
+    });
+}
+
+function clientIsReady(channel, clientId) {
+    console.log("CLIENT IS READY");
+    pubnub.state({
+        channel: channel,
+        uuid: clientId,
+        callback: function(state) {
+            state.isReady = true;
+            pubnub.state({
+                channel: channel,
+                uuid: clientId,
+                state: state,
+                callback: function(m) {
+                    console.log("START CB: " + JSON.stringify(m) + " ON: ", channel);
+                },
+                error: function() {
+                    alert("ERROR!");
+                }
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
+

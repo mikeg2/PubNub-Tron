@@ -197,7 +197,14 @@ function waitForGameToStart(config) {
     gameView();
     config.canvas = "#game-canvas";
     config.myId = MY_UUID;
-    Game.create(config).startGame(config.startTime);
+    var game = Game.create(config);
+    if (config.server) {
+        waitForClientsReady([config.opponentId], config.channel, game.startGame);
+    } else {
+        game.startGame();
+        clientIsReady(config.channel, config.myId);
+    }
+
 }
 
 /* Views */

@@ -87,13 +87,11 @@ var GameView;
     PlayerView.prototype = {
 
         rebuildView: function() {
-            console.log("REBUILDING VIEW");
             this.redrawPath();
             this.redrawIcon();
         },
 
         refreshView: function() {
-            console.log("REFRESH VIEW");
             this.redrawIcon();
             this.updateLastLine();
         },
@@ -101,7 +99,6 @@ var GameView;
         redrawPath: function() {
             var lines = getLinesFromEvents(this._model.eventList.getEvents());
             var lineGrapics = this.drawLines(lines);
-            console.log("LAST LINE MODEL", lines[lines.length - 1]);
             this._cache.lastLineModel = lines[lines.length - 1];
             this._cache.lastLineGraphic = lineGrapics[0];
         },
