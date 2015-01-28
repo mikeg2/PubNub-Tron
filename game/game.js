@@ -138,7 +138,7 @@ function RuleEnforcer(model, gameOver) {
             if (isCollision(model, opt) || areOverBounds(model)) {
                 gameOver();
             }
-        }, 200);
+        }, 100);
     };
     this.stop = function() {
         clearInterval(_this.loop);
@@ -149,6 +149,7 @@ function isCollision(model, opt) {
     return isIntersectionFromEvents(model.players[0], model.players[1], opt);
 }
 
+//TODO: Refactor
 function isIntersectionFromEvents(player1, player2, opt) {
     var selfOpt = $.extend({
         fudge: Math.pow(player1.thickness / 2, 2), // Awkword and imperfict solution to overlapping on turns
@@ -158,7 +159,16 @@ function isIntersectionFromEvents(player1, player2, opt) {
     lines1.thickness = player1.thickness;
     var lines2 = getCacheLinesFromEvents(player2.eventList.getEvents(), player2.id, opt.cacheGive || 0);
     lines2.thickness = player2.thickness;
-    return areThickLinesIntersecting(lines1, lines2, opt) || areThickLinesIntersecting(lines1, lines1, selfOpt) || areThickLinesIntersecting(lines2, lines2, selfOpt);
+    var result = areThickLinesIntersecting(lines1, lines2, opt) || areThickLinesIntersecting(lines2, lines1, opt) || areThickLinesIntersecting(lines1, lines1, selfOpt) || areThickLinesIntersecting(lines2, lines2, selfOpt);
+    if (opt.linesCompleted) {
+        for (var i = lines1.length - 1; i >= 0; i--) {
+            opt.linesCompleted[lines1[i].id] = true;
+        }
+        for (var j = lines2.length - 1; j >= 0; j--) {
+            opt.linesCompleted[lines2[j].id] = true;
+        }
+    }
+    return result;
 }
 
 function areThickLinesIntersecting(lines1, lines2, opt) {
@@ -168,8 +178,6 @@ function areThickLinesIntersecting(lines1, lines2, opt) {
         if (opt.blacklist && opt.blacklist[lines1[i].id]) {
             console.log("BLACKLISTED");
             return;
-        } else if(opt.linesCompleted) {
-            opt.linesCompleted[lines1[i].id] = true;
         }
         var l1 = lines1[i];
         l1.thickness = l1.thickness || lines1.thickness;
