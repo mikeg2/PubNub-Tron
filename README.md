@@ -1,6 +1,6 @@
 #PubNub Tron
 
-A two-player implementation of tron using PubNub and CreateJs. Since I only have access to one computer, I haven't been able to thoroughly bug test on multiple devices.
+A two-player implementation of Tron using PubNub and CreateJs. Since I only have access to one computer, I haven't been able to thoroughly bug test on multiple devices. As this was my first time using PubNub, I underestimated its latency. Latency problems in the game could easily be fixed by using PubNub to broker a websocket instead of using PubNub directly.
 
 #Code Structure
 PubNub Tron has two main parts:
@@ -11,7 +11,7 @@ PubNub Tron has two main parts:
 The game has four main parts:
 
 - <strong>Model</strong> <em>(game/model.js)</em> Responsible for keeping state synced accross player devices
-- <strong>Game Controller</strong> <em>(game/gameController.js)</em> Adds events to model based on user input (i.e. up, down, left, right key)
+- <strong>Game Controller</strong> <em>(game/gameController.js)</em> Adds events to model based on user input (i.e. up, down, left, right)
 - <strong>View</strong> <em>(game/gameView.js)</em>
 - <strong>Rule Enforcer</strong> <em>(game/game.js)</em> Watches model to see if any rules have been broken (i.e collisions).
 
