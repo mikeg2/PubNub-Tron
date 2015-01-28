@@ -16,9 +16,9 @@ The game has four main parts:
 - <strong>Rule Enforcer</strong> <em>(game/game.js)</em> Watches model to see if any rules have been broken (i.e collisions).
 
 #Networking/Model
-The model stores a series of timestamped events for each player (i.e "turn up", "turn down"...). The Model Helper (game/modelHelper.js) converts those events into an array of lines that correspond to the users path.
+The model stores an array of timestamped events for each player (i.e "turn up", "turn down"...). The Model Helper (game/modelHelper.js) converts those events into an array of lines used to draw the users path.
 
-One player's device is designated the "server" and the other the "client." In order to ensure that they When the controller adds an event to the client's model, the model creates a temporary event with a temporary timestamp. The client model then sends the server model an "event request." The server responds to the event request with an event object, which has a timestamp. The client replaces the temporary event with the actual event from the server. This ensures that the timestamps on the client model's events match the timestamps on the server model's events.
+One player's device is designated the "server" and the other the "client." When the client's controller adds an event to the client's model, the client's model creates a temporary event (the temporary event's timestamp is the current time). The client model then sends the server model an "event request." The server model responds to the event request with an event object with an updated timestamp. The client replaces its temporary event with the actual event from the server. This ensures that the timestamps on the client model's events match the timestamps on the server model's events.
 
 #To Do
 - Refactor All Code
