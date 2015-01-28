@@ -20,7 +20,7 @@ The model stores an array of timestamped events for each player (i.e "turn up", 
 
 One player's device is designated the "server" and the other the "client." When the client's controller updates the client's model, the client's model creates a temporary event who's timestamp is the current time. The client model then sends the server model an "event request." The server model responds to the event request with an event object that has an updated timestamp. The client replaces its temporary event with the actual event from the server. This ensures that the timestamps on the client model events match the timestamps on the server model events.
 
-Ex:
+<strong>Example:</strong>
 - User hits up arrow at time 100000ms
 - Client model adds temporary event to its event array: [{dir: 'u', time: 100000}]
     - Client view uses temporary event to draw user's path without latency
