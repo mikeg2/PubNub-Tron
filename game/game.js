@@ -1,3 +1,10 @@
+/**
+ * @param model: A model instants from the models.js file
+ * @param view: A view instants from the view.js file
+ * @param controller: A controller instants from the controller.js file
+ * @param intializer: Function to initialize model on game start (must be called after Models are syncing)
+ * @param enf: Whether or not this game instants should enforce the rules with RuleEnforcer
+ */
 var Game = function(model, view, controller, initializer, enf) {
     this._model = model;
     this._view = view;
@@ -41,6 +48,9 @@ var Game = function(model, view, controller, initializer, enf) {
     }
 };
 
+/**
+ * Initializes game from config object. Configs differently for server vs. client
+ */
 Game.create = function(config) {
         var model = getModel(config);
         var view = getView(model, config);
@@ -123,7 +133,10 @@ function initializer(model, startTime) {
 
 /* Rules Enforcer */
 
-//TODO: Cache this somehow
+/**
+ * Watches model to check if rules have been broken (i.e collisions, player hits edge of screen)
+ * Calls callback "gameOver" when a rule is broken.
+ */
 function RuleEnforcer(model, gameOver) {
     var _this = this;
     this._lineModel = model;
@@ -152,7 +165,7 @@ function isCollision(model, opt) {
 //TODO: Refactor
 function isIntersectionFromEvents(player1, player2, opt) {
     var selfOpt = $.extend({
-        fudge: Math.pow(player1.thickness / 2, 2), // Awkword and imperfict solution to overlapping on turns
+        fudge: Math.pow(player1.thickness / 2, 2) + 0.4, // Awkward and imperfect solution to overlapping on turns
         skipDuplicates: true
     }, opt);
     var lines1 = getCacheLinesFromEvents(player1.eventList.getEvents(), player1.id, opt.cacheGive || 0);
