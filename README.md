@@ -1,6 +1,6 @@
 #PubNub Tron
 
-A two-player implementation of Tron using PubNub and CreateJs. Since I only have access to one computer, I haven't been able to thoroughly bug test on multiple devices. As this was my first time using PubNub, I underestimated its latency. Latency problems in the game could easily be fixed by using PubNub to broker a websocket instead of using PubNub directly.
+A two-player implementation of Tron using PubNub and CreateJs. Since I only have access to one computer, I haven't been able to thoroughly bug test on multiple devices. As this was my first time using PubNub, I underestimated its latency. Latency problems in the game could easily be fixed by using PubNub to broker a websocket connection instead of using PubNub directly for game events.
 
 #Code Structure
 PubNub Tron has two main parts:
@@ -16,7 +16,7 @@ The game has four main parts:
 - <strong>Rule Enforcer</strong> <em>(game/game.js)</em> Watches model to see if any rules have been broken (i.e collisions).
 
 #Networking/Model
-The model stores an array of time-stamped events for each player (i.e "turn up", "turn down"...). The Model Helper (game/modelHelper.js) converts those events into an array of lines used to draw the user's path. Ex: If the user starts at point (0,0), then turns up at 5 seconds, and then turns right at 7 seconds, modelHelper can figure out the user's path with basic "distance=(rate)(time)".
+The model stores an array of time-stamped events for each player (i.e "turn up", "turn down"...). The Model Helper (game/modelHelper.js) converts those events into an array of lines used to draw the user's path. Ex: If the user starts at point (0,0) at 0 seconds, then turns up at 5 seconds, and then turns right at 7 seconds, modelHelper can figure out the user's path with basic "distance=(rate)(time)".
 
 One player's device is designated the "server" and the other the "client." When the client's controller updates the client's model, the client's model creates a temporary event who's timestamp is the current time. The client model then sends the server model an "event request." The server model responds to the event request with an event object that has an updated timestamp. The client replaces its temporary event with the actual event from the server. This ensures that the timestamps on the client model events match the timestamps on the server model events.
 
