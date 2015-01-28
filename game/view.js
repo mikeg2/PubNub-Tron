@@ -113,7 +113,7 @@ var GameView;
 
         updateLastLine: function() {
             if (!this._cache.lastLineModel) {
-                return;
+                return this.rebuildView();
             }
             var lastLineModel = updateLineTo(this._cache.lastLineModel, timeSync.now());
             this._stage.removeChild(this._cache.lastLineGraphic);

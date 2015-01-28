@@ -133,7 +133,7 @@ function RuleEnforcer(model, gameOver) {
             if (isCollision(model, opt) || areOverBounds(model)) {
                 gameOver();
             }
-        }, 120);
+        }, 200);
     };
     this.stop = function() {
         clearInterval(this.loop);
