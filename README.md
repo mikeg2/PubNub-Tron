@@ -28,7 +28,7 @@ One player's device is designated the "server" and the other the "client." When 
 - Server model receives event requests at time 100010ms
 - Server model uses information in event request to create new event: {dir: 'u', time: 100010}
 - Server adds event to its event array and sends copy of event back to client
-- Client removes its temporary event {dir: 'u', time: 100000} with server event {dir: 'u', time: 100010}
+- Client replaces its temporary event {dir: 'u', time: 100000} with server event {dir: 'u', time: 100010}
 - Client view updates with new event
 
 #To Do
