@@ -138,5 +138,5 @@ function calcDelta(dir, distance) {
 }
 
 function distanceTraveled(info) {
-    return info.time * 0.05; //CONFIG.PLAYER_SPEED || 5;
+    return info.time * 0.08; //CONFIG.PLAYER_SPEED || 5;
 }
