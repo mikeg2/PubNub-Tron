@@ -104,6 +104,11 @@ var ServerModel;
                 cbs[i]();
             }
         };
+        obj["remove" + capitalize(cbName)] = function(toRemove) {
+            cbs = cbs.filter(function(obj) {
+                return obj != toRemove;
+            });
+        };
     }
 
     /*------Model Properties-----*/
@@ -136,7 +141,7 @@ var ServerModel;
             },
             set: function(val) {
                 console.log("OBJECT: ", obj, "SETTING: ", propName, " TO: ", val);
-                if(this[privateName(propName)] == val) {
+                if(this[privateName(propName)] === val) {
                     return;
                 }
                 opt.onUpdate(val);
@@ -275,6 +280,7 @@ var ServerModel;
     ServerEventList = function(conf) {
         AbstractEventList.call(this, conf);
         var _this = this;
+        var reqToEvent;
 
         (function reqToEventSetup() {
             /**

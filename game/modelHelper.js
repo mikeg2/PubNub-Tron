@@ -13,6 +13,34 @@ function getFinalLocation(eventsSorted, startingState) {
 
 }
 
+/* Line Model Wrapper */
+// var ModelLineWrapper = function(model) {
+//     this._model = model;
+//     this._players = {};
+//     var _this = this;
+
+//     model.onPlayerChange(rebuildPlayerLines);
+//     function rebuildPlayerLines() {
+//         for (var i = model.players.length - 1; i >= 0; i--) {
+//             var player = model.players[i];
+//             _this._players[player.id] = getLinesFromEvents(player.eventList.getEvents());
+//         }
+//     }
+
+//     function getPlayerRefreshedLinesTo(playerId, time) {
+//         var playerLines = _this._players[player.id];
+//         var lastLine = playerLines[playerLines.length - 1];
+//         var updatedLastLine = updateLineTo(lastLine, time);
+//         playerLines[playerLines.length - 1] = updatedLastLine;
+//         return playerLines;
+//     }
+
+//     function getRefreshedLinesTo(time) {
+//         var allLines = [];
+//         for
+//     }
+// };
+
 /* Cached Location */
 
 var LOCATION_CACHE = {};

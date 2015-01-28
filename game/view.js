@@ -8,7 +8,11 @@ var GameView;
         this._stage = new createjs.Stage(this._canvas);
 
         var _this = this;
+        var viewRebuild = function() {
+                _this.rebuildView();
+        };
         this.start = function() {
+            console.log("VIEW START");
             model.onGameWidthUpdated = function() {
                 _this._canvas.width = model.gameWidth;
             };
@@ -30,14 +34,14 @@ var GameView;
                 _this.refreshView();
                 //_this.rebuildView();
             }, 50);
-            model.onPlayerChange(function() {
-                _this.rebuildView();
-            });
-            _this.rebuildView();
+            model.onPlayerChange(viewRebuild);
+            _this.rebuildView(viewRebuild);
         };
 
         this.stop = function() {
+            console.log("VIEW STOP");
             clearInterval(_this.loop);
+            model.removeOnPlayerChange(viewRebuild);
         };
     };
     GameView.prototype = {

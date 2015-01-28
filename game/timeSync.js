@@ -31,7 +31,6 @@ timeSync = {
 
     now: function() {
         var now = this.localTime() - this.aheadBy;
-        console.log("NOW: ", now, "AHEAD BY: ", this.aheadBy);
         return now;
     },
 

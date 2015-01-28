@@ -10,7 +10,10 @@ var Game = function(model, view, controller, initializer, enf) {
     }; // Won't work if model calls before onReady is set
 
     this.startGame = function() {
-        console.log("STARTING GAME");
+        if (_this.started) {
+            return;
+        }
+        _this.started = true;
         initializer(_this._model); // Rethink program structure
         _this._view.start();
         _this._controller.start();
@@ -34,6 +37,7 @@ var Game = function(model, view, controller, initializer, enf) {
         if(enf) {
             _this._ruleEnforcer.stop();
         }
+        _this.started = false;
     }
 };
 
@@ -121,19 +125,20 @@ function initializer(model, startTime) {
 
 //TODO: Cache this somehow
 function RuleEnforcer(model, gameOver) {
-    this._model = model;
+    var _this = this;
+    this._lineModel = model;
     this.start = function() {
         var opt = {
             cacheGive: 100
         };
-        this.loop = setInterval(function() {
+        _this.loop = setInterval(function() {
             if (isCollision(model, opt) || areOverBounds(model)) {
                 gameOver();
             }
         }, 200);
     };
     this.stop = function() {
-        clearInterval(this.loop);
+        clearInterval(_this.loop);
     };
 }
 
