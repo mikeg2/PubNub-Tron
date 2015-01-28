@@ -128,8 +128,11 @@ function RuleEnforcer(model, gameOver) {
     var _this = this;
     this._lineModel = model;
     this.start = function() {
+        var linesCompleted = {};
         var opt = {
-            cacheGive: 100
+            cacheGive: 100,
+            linesCompleted: linesCompleted,
+            blacklist: linesCompleted
         };
         _this.loop = setInterval(function() {
             if (isCollision(model, opt) || areOverBounds(model)) {
@@ -147,21 +150,27 @@ function isCollision(model, opt) {
 }
 
 function isIntersectionFromEvents(player1, player2, opt) {
-    var selfOpt = {
+    var selfOpt = $.extend({
         fudge: Math.pow(player1.thickness / 2, 2), // Awkword and imperfict solution to overlapping on turns
         skipDuplicates: true
-    };
+    }, opt);
     var lines1 = getCacheLinesFromEvents(player1.eventList.getEvents(), player1.id, opt.cacheGive || 0);
     lines1.thickness = player1.thickness;
     var lines2 = getCacheLinesFromEvents(player2.eventList.getEvents(), player2.id, opt.cacheGive || 0);
     lines2.thickness = player2.thickness;
-    return areThickLinesIntersecting(lines1, lines2) || areThickLinesIntersecting(lines1, lines1, selfOpt) || areThickLinesIntersecting(lines2, lines2, selfOpt);
+    return areThickLinesIntersecting(lines1, lines2, opt) || areThickLinesIntersecting(lines1, lines1, selfOpt) || areThickLinesIntersecting(lines2, lines2, selfOpt);
 }
 
 function areThickLinesIntersecting(lines1, lines2, opt) {
     opt = opt || {};
-    console.log("ARE LINES INTERESTING");
+    console.log("ARE LINES INTERESTING: ", opt);
     for (var i = lines1.length - 1; i >= 0; i--) {
+        if (opt.blacklist && opt.blacklist[lines1[i].id]) {
+            console.log("BLACKLISTED");
+            return;
+        } else if(opt.linesCompleted) {
+            opt.linesCompleted[lines1[i].id] = true;
+        }
         var l1 = lines1[i];
         l1.thickness = l1.thickness || lines1.thickness;
         for (var j = lines2.length - 1; j >= 0; j--) {

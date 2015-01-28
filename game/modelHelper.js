@@ -88,29 +88,30 @@ function getLinesFromEvents(events) {
         if (!lastLocation && events[i].loc) {
             lastLocation = events[i].loc;
         }
-        var newLocation = calcLocation(lastLocation, {
-            dir: events[i].dir,
-            time: events[i+1].time - events[i].time
-        });
-        lines.push({
-            start: lastLocation,
-            end: newLocation,
-            startEvent: events[i].time
-        });
-        lastLocation = newLocation;
+        var timeDelta = events[i+1].time - events[i].time;
+        var line = getLineFromStartEvent(events[i], lastLocation, timeDelta);
+        lines.push(line);
+        lastLocation = line.end;
     } // TODO: Remove code duplication
     var lastEvent = events[events.length - 1];
     lastLocation = lastLocation || lastEvent.loc;
-    var currentLocation = calcLocation(lastLocation, {
-        dir: lastEvent.dir,
-        time: timeSync.now() - lastEvent.time,
-    });
-    lines.push({
-        start: lastLocation,
-        end: currentLocation,
-        startEvent: lastEvent
-    });
+    var timeSince = timeSync.now() - lastEvent.time;
+    var lastLine = getLineFromStartEvent(lastEvent, lastLocation, timeSince);
+    lines.push(lastLine);
     return lines;
+}
+
+function getLineFromStartEvent(startEvent, lastLocation, timeDelta) {
+    var newLocation = calcLocation(lastLocation, {
+        dir: startEvent.dir,
+        time: timeDelta
+    });
+    return {
+        start: lastLocation,
+        end: newLocation,
+        id: startEvent.id + "-" + timeDelta + "-line",
+        startEvent: startEvent
+    };
 }
 
 function updateLineTo(lastLine, now) {

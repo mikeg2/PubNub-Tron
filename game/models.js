@@ -203,6 +203,7 @@ var ServerModel;
 
         addEventObj: function(anEvent) {
             this._events.push(anEvent);
+            anEvent.id = anEvent.id || createId(12);
             this.callOnChange();
         },
 
